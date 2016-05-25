@@ -1,0 +1,486 @@
+syntax = "proto3";
+
+package io.bigfast;
+
+//import "scalapb/scalapb.proto";
+
+// The greeter service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (stream Request) returns (stream Response) {}
+}
+
+message Request {
+    enum Type {
+        HELLO = 0;			// The client has successfully connected to the server
+        MESSAGE_SENT = 1;			// A message was sent to a channel
+        USER_TYPING = 2;			// A channel member is typing a message
+        CHANNEL_MARKED = 3;			// Your channel read marker was updated
+        CHANNEL_CREATED = 4;			// A team channel was created
+        CHANNEL_JOINED = 5;			// You joined a channel
+        CHANNEL_LEFT = 6;			// You left a channel
+        CHANNEL_DELETED = 7;			// A team channel was deleted
+        CHANNEL_RENAME = 8;			// A team channel was renamed
+        CHANNEL_ARCHIVE = 9;			// A team channel was archived
+        CHANNEL_UNARCHIVE = 10;			// A team channel was unarchived
+        CHANNEL_HISTORY_CHANGED = 11;			// Bulk updates were made to a channel's history
+        DND_UPDATED = 12;			// Do not Disturb settings changed for the current user
+        DND_UPDATED_USER = 13;			// Do not Disturb settings changed for a team member
+        IM_CREATED = 14;			// A direct message channel was created
+        IM_OPEN = 15;			// You opened a direct message channel
+        IM_CLOSE = 16;			// You closed a direct message channel
+        IM_MARKED = 17;			// A direct message read marker was updated
+        IM_HISTORY_CHANGED = 18;			// Bulk updates were made to a DM channel's history
+        GROUP_JOINED = 19;			// You joined a private group
+        GROUP_LEFT = 20;			// You left a private group
+        GROUP_OPEN = 21;			// You opened a group channel
+        GROUP_CLOSE = 22;			// You closed a group channel
+        GROUP_ARCHIVE = 23;			// A private group was archived
+        GROUP_UNARCHIVE = 24;			// A private group was unarchived
+        GROUP_RENAME = 25;			// A private group was renamed
+        GROUP_MARKED = 26;			// A private group read marker was updated
+        GROUP_HISTORY_CHANGED = 27;			// Bulk updates were made to a group's history
+        FILE_CREATED = 28;			// A file was created
+        FILE_SHARED = 29;			// A file was shared
+        FILE_UNSHARED = 30;			// A file was unshared
+        FILE_PUBLIC = 31;			// A file was made public
+        FILE_PRIVATE = 32;			// A file was made private
+        FILE_CHANGE = 33;			// A file was changed
+        FILE_DELETED = 34;			// A file was deleted
+        FILE_COMMENT_ADDED = 35;			// A file comment was added
+        FILE_COMMENT_EDITED = 36;			// A file comment was edited
+        FILE_COMMENT_DELETED = 37;			// A file comment was deleted
+        PIN_ADDED = 38;			// A pin was added to a channel
+        PIN_REMOVED = 39;			// A pin was removed from a channel
+        PRESENCE_CHANGE = 40;			// A team member's presence changed
+        MANUAL_PRESENCE_CHANGE = 41;			// You manually updated your presence
+        PREF_CHANGE = 42;			// You have updated your preferences
+        USER_CHANGE = 43;			// A team member's data has changed
+        TEAM_JOIN = 44;			// A new team member has joined
+        STAR_ADDED = 45;			// A team member has starred an item
+        STAR_REMOVED = 46;			// A team member removed a star
+        REACTION_ADDED = 47;			// A team member has added an emoji reaction to an item
+        REACTION_REMOVED = 48;			// A team member removed an emoji reaction
+        EMOJI_CHANGED = 49;			// A team custom emoji has been added or changed
+        COMMANDS_CHANGED = 50;			// A team slash command has been added or changed
+        TEAM_PLAN_CHANGE = 51;			// The team billing plan has changed
+        TEAM_PREF_CHANGE = 52;			// A team preference has been updated
+        TEAM_RENAME = 53;			// The team name has changed
+        TEAM_DOMAIN_CHANGE = 54;			// The team domain has changed
+        EMAIL_DOMAIN_CHANGED = 55;			// The team email domain has changed
+        TEAM_PROFILE_CHANGE = 56;			// Team profile fields have been updated
+        TEAM_PROFILE_DELETE = 57;			// Team profile fields have been deleted
+        TEAM_PROFILE_REORDER = 58;			// Team profile fields have been reordered
+        BOT_ADDED = 59;			// An integration bot was added
+        BOT_CHANGED = 60;			// An integration bot was changed
+        ACCOUNTS_CHANGED = 61;			// The list of accounts a user is signed into has changed
+        TEAM_MIGRATION_STARTED = 62;			// The team is being migrated between servers
+        SUBTEAM_CREATED = 63;			// A user group has been added to the team
+        SUBTEAM_UPDATED = 64;			// An existing user group has been updated or its members changed
+        SUBTEAM_SELF_ADDED = 65;			// You have been added to a user group
+        SUBTEAM_SELF_REMOVED = 66;			// You have been removed from a user group
+    }
+
+    message MessageSent {
+        int64 channelId = 1;
+        string content = 2;
+    }
+
+    message ChannelCreated {
+        int64 channelId = 1;
+    }
+
+    message ChannelJoined {
+        int64 channelId = 1;
+    }
+
+    message ChannelLeft {
+        int64 channelId = 1;
+    }
+
+    string id = 1;                                  // request id
+    int64 ts = 2;                                   // i.e 1456967434462 for Wed Mar 02 17:10:34 PST 2016
+    int64 user = 3;                                 // user id
+
+    oneof detail {
+        MessageSent messageSent = 101;
+        ChannelCreated channelCreated = 102;
+        ChannelJoined channelJoined  = 103;
+        ChannelLeft channelLeft = 104;
+    }
+}
+
+message Response {
+    message Ok {
+    }
+
+    message Error {
+        int32 code = 1;
+        string description = 2;
+    }
+
+    message Channel {
+
+    }
+
+    string id = 1;                                  // response to request id, should be the same
+    int64 ts = 2;                                   // i.e 1456967434462 for Wed Mar 02 17:10:34 PST 2016
+    int64 user = 3;                                 // user id
+    Request.Type responseTo = 4;                    // response to request type
+
+    oneof detail {
+        Ok ok = 101;
+        Error error = 102;
+    }
+}
+
+/*
+message ChatMessage {
+    enum Type {
+        HELLO = 0;			// The client has successfully connected to the server
+        MESSAGE = 1;			// A message was sent to a channel
+        USER_TYPING = 2;			// A channel member is typing a message
+        CHANNEL_MARKED = 3;			// Your channel read marker was updated
+        CHANNEL_CREATED = 4;			// A team channel was created
+        CHANNEL_JOINED = 5;			// You joined a channel
+        CHANNEL_LEFT = 6;			// You left a channel
+        CHANNEL_DELETED = 7;			// A team channel was deleted
+        CHANNEL_RENAME = 8;			// A team channel was renamed
+        CHANNEL_ARCHIVE = 9;			// A team channel was archived
+        CHANNEL_UNARCHIVE = 10;			// A team channel was unarchived
+        CHANNEL_HISTORY_CHANGED = 11;			// Bulk updates were made to a channel's history
+        DND_UPDATED = 12;			// Do not Disturb settings changed for the current user
+        DND_UPDATED_USER = 13;			// Do not Disturb settings changed for a team member
+        IM_CREATED = 14;			// A direct message channel was created
+        IM_OPEN = 15;			// You opened a direct message channel
+        IM_CLOSE = 16;			// You closed a direct message channel
+        IM_MARKED = 17;			// A direct message read marker was updated
+        IM_HISTORY_CHANGED = 18;			// Bulk updates were made to a DM channel's history
+        GROUP_JOINED = 19;			// You joined a private group
+        GROUP_LEFT = 20;			// You left a private group
+        GROUP_OPEN = 21;			// You opened a group channel
+        GROUP_CLOSE = 22;			// You closed a group channel
+        GROUP_ARCHIVE = 23;			// A private group was archived
+        GROUP_UNARCHIVE = 24;			// A private group was unarchived
+        GROUP_RENAME = 25;			// A private group was renamed
+        GROUP_MARKED = 26;			// A private group read marker was updated
+        GROUP_HISTORY_CHANGED = 27;			// Bulk updates were made to a group's history
+        FILE_CREATED = 28;			// A file was created
+        FILE_SHARED = 29;			// A file was shared
+        FILE_UNSHARED = 30;			// A file was unshared
+        FILE_PUBLIC = 31;			// A file was made public
+        FILE_PRIVATE = 32;			// A file was made private
+        FILE_CHANGE = 33;			// A file was changed
+        FILE_DELETED = 34;			// A file was deleted
+        FILE_COMMENT_ADDED = 35;			// A file comment was added
+        FILE_COMMENT_EDITED = 36;			// A file comment was edited
+        FILE_COMMENT_DELETED = 37;			// A file comment was deleted
+        PIN_ADDED = 38;			// A pin was added to a channel
+        PIN_REMOVED = 39;			// A pin was removed from a channel
+        PRESENCE_CHANGE = 40;			// A team member's presence changed
+        MANUAL_PRESENCE_CHANGE = 41;			// You manually updated your presence
+        PREF_CHANGE = 42;			// You have updated your preferences
+        USER_CHANGE = 43;			// A team member's data has changed
+        TEAM_JOIN = 44;			// A new team member has joined
+        STAR_ADDED = 45;			// A team member has starred an item
+        STAR_REMOVED = 46;			// A team member removed a star
+        REACTION_ADDED = 47;			// A team member has added an emoji reaction to an item
+        REACTION_REMOVED = 48;			// A team member removed an emoji reaction
+        EMOJI_CHANGED = 49;			// A team custom emoji has been added or changed
+        COMMANDS_CHANGED = 50;			// A team slash command has been added or changed
+        TEAM_PLAN_CHANGE = 51;			// The team billing plan has changed
+        TEAM_PREF_CHANGE = 52;			// A team preference has been updated
+        TEAM_RENAME = 53;			// The team name has changed
+        TEAM_DOMAIN_CHANGE = 54;			// The team domain has changed
+        EMAIL_DOMAIN_CHANGED = 55;			// The team email domain has changed
+        TEAM_PROFILE_CHANGE = 56;			// Team profile fields have been updated
+        TEAM_PROFILE_DELETE = 57;			// Team profile fields have been deleted
+        TEAM_PROFILE_REORDER = 58;			// Team profile fields have been reordered
+        BOT_ADDED = 59;			// An integration bot was added
+        BOT_CHANGED = 60;			// An integration bot was changed
+        ACCOUNTS_CHANGED = 61;			// The list of accounts a user is signed into has changed
+        TEAM_MIGRATION_STARTED = 62;			// The team is being migrated between servers
+        SUBTEAM_CREATED = 63;			// A user group has been added to the team
+        SUBTEAM_UPDATED = 64;			// An existing user group has been updated or its members changed
+        SUBTEAM_SELF_ADDED = 65;			// You have been added to a user group
+        SUBTEAM_SELF_REMOVED = 66;			// You have been removed from a user group
+    }
+
+    message Hello {
+      string msg = 1;
+    }
+
+    message Message {
+    }
+
+    message UserTyping {
+    }
+
+    message ChannelMarked {
+    }
+
+    message ChannelCreated {
+    }
+
+    message ChannelJoined {
+    }
+
+    message ChannelLeft {
+    }
+
+    message ChannelDeleted {
+    }
+
+    message ChannelRename {
+    }
+
+    message ChannelArchive {
+    }
+
+    message ChannelUnarchive {
+    }
+
+    message ChannelHistoryChanged {
+    }
+
+    message DndUpdated {
+    }
+
+    message DndUpdatedUser {
+    }
+
+    message ImCreated {
+    }
+
+    message ImOpen {
+    }
+
+    message ImClose {
+    }
+
+    message ImMarked {
+    }
+
+    message ImHistoryChanged {
+    }
+
+    message GroupJoined {
+    }
+
+    message GroupLeft {
+    }
+
+    message GroupOpen {
+    }
+
+    message GroupClose {
+    }
+
+    message GroupArchive {
+    }
+
+    message GroupUnarchive {
+    }
+
+    message GroupRename {
+    }
+
+    message GroupMarked {
+    }
+
+    message GroupHistoryChanged {
+    }
+
+    message FileCreated {
+    }
+
+    message FileShared {
+    }
+
+    message FileUnshared {
+    }
+
+    message FilePublic {
+    }
+
+    message FilePrivate {
+    }
+
+    message FileChange {
+    }
+
+    message FileDeleted {
+    }
+
+    message FileCommentAdded {
+    }
+
+    message FileCommentEdited {
+    }
+
+    message FileCommentDeleted {
+    }
+
+    message PinAdded {
+    }
+
+    message PinRemoved {
+    }
+
+    message PresenceChange {
+    }
+
+    message ManualPresenceChange {
+    }
+
+    message PrefChange {
+    }
+
+    message UserChange {
+    }
+
+    message TeamJoin {
+    }
+
+    message StarAdded {
+    }
+
+    message StarRemoved {
+    }
+
+    message ReactionAdded {
+    }
+
+    message ReactionRemoved {
+    }
+
+    message EmojiChanged {
+    }
+
+    message CommandsChanged {
+    }
+
+    message TeamPlanChange {
+    }
+
+    message TeamPrefChange {
+    }
+
+    message TeamRename {
+    }
+
+    message TeamDomainChange {
+    }
+
+    message EmailDomainChanged {
+    }
+
+    message TeamProfileChange {
+    }
+
+    message TeamProfileDelete {
+    }
+
+    message TeamProfileReorder {
+    }
+
+    message BotAdded {
+    }
+
+    message BotChanged {
+    }
+
+    message AccountsChanged {
+    }
+
+    message TeamMigrationStarted {
+    }
+
+    message SubteamCreated {
+    }
+
+    message SubteamUpdated {
+    }
+
+    message SubteamSelfAdded {
+    }
+
+    message SubteamSelfRemoved {
+    }
+
+    Type type = 1;
+    string id = 2;
+    string ts = 3;
+    string text = 4;
+    oneof data {
+        Hello hello = 101;
+        Message message = 102;
+        UserTyping userTyping = 103;
+        ChannelMarked channelMarked = 104;
+        ChannelCreated channelCreated = 105;
+        ChannelJoined channelJoined = 106;
+        ChannelLeft channelLeft = 107;
+        ChannelDeleted channelDeleted = 108;
+        ChannelRename channelRename = 109;
+        ChannelArchive channelArchive = 110;
+        ChannelUnarchive channelUnarchive = 111;
+        ChannelHistoryChanged channelHistoryChanged = 112;
+        DndUpdated dndUpdated = 113;
+        DndUpdatedUser dndUpdatedUser = 114;
+        ImCreated imCreated = 115;
+        ImOpen imOpen = 116;
+        ImClose imClose = 117;
+        ImMarked imMarked = 118;
+        ImHistoryChanged imHistoryChanged = 119;
+        GroupJoined groupJoined = 120;
+        GroupLeft groupLeft = 121;
+        GroupOpen groupOpen = 122;
+        GroupClose groupClose = 123;
+        GroupArchive groupArchive = 124;
+        GroupUnarchive groupUnarchive = 125;
+        GroupRename groupRename = 126;
+        GroupMarked groupMarked = 127;
+        GroupHistoryChanged groupHistoryChanged = 128;
+        FileCreated fileCreated = 129;
+        FileShared fileShared = 130;
+        FileUnshared fileUnshared = 131;
+        FilePublic filePublic = 132;
+        FilePrivate filePrivate = 133;
+        FileChange fileChange = 134;
+        FileDeleted fileDeleted = 135;
+        FileCommentAdded fileCommentAdded = 136;
+        FileCommentEdited fileCommentEdited = 137;
+        FileCommentDeleted fileCommentDeleted = 138;
+        PinAdded pinAdded = 139;
+        PinRemoved pinRemoved = 140;
+        PresenceChange presenceChange = 141;
+        ManualPresenceChange manualPresenceChange = 142;
+        PrefChange prefChange = 143;
+        UserChange userChange = 144;
+        TeamJoin teamJoin = 145;
+        StarAdded starAdded = 146;
+        StarRemoved starRemoved = 147;
+        ReactionAdded reactionAdded = 148;
+        ReactionRemoved reactionRemoved = 149;
+        EmojiChanged emojiChanged = 150;
+        CommandsChanged commandsChanged = 151;
+        TeamPlanChange teamPlanChange = 152;
+        TeamPrefChange teamPrefChange = 153;
+        TeamRename teamRename = 154;
+        TeamDomainChange teamDomainChange = 155;
+        EmailDomainChanged emailDomainChanged = 156;
+        TeamProfileChange teamProfileChange = 157;
+        TeamProfileDelete teamProfileDelete = 158;
+        TeamProfileReorder teamProfileReorder = 159;
+        BotAdded botAdded = 160;
+        BotChanged botChanged = 161;
+        AccountsChanged accountsChanged = 162;
+        TeamMigrationStarted teamMigrationStarted = 163;
+        SubteamCreated subteamCreated = 164;
+        SubteamUpdated subteamUpdated = 165;
+        SubteamSelfAdded subteamSelfAdded = 166;
+        SubteamSelfRemoved subteamSelfRemoved = 167;
+    }
+}
+
+*/
