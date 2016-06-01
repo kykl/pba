@@ -10,6 +10,8 @@ service Greeter {
   rpc SayHello (stream Request) returns (stream Response) {}
 }
 
+// Model after this for now - https://api.slack.com/rtm
+
 message Request {
     enum Type {
         HELLO = 0;			// The client has successfully connected to the server
