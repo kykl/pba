@@ -58,8 +58,21 @@ class ChatServer(executionContext: ExecutionContext) { self =>
 
   private class ChatImpl extends ChatGrpc.Chat {
 
-    override def subscribeEvents(responseObserver: StreamObserver[Event]): StreamObserver[EventSubscription] = ???
+    override def subscribeEvents(responseObserver: StreamObserver[Event]): StreamObserver[EventSubscription] = {
+      new StreamObserver[EventSubscription] {
+        override def onError(t: Throwable): Unit = println(t)
 
-    override def createChannel(request: CreateChannelRequest): Future[CreateChannelResponse] = ???
+        override def onCompleted(): Unit = responseObserver.onCompleted()
+
+        override def onNext(value: EventSubscription): Unit = {
+          responseObserver.onNext(Event("foo"))
+        }
+      }
+    }
+
+    override def createChannel(request: CreateChannelRequest): Future[CreateChannelResponse] = Future {
+      println(s"Creating channel: name - ${request.name} | desc - ${request.description}")
+      CreateChannelResponse(channelId = 123L, request = Some(request))
+    }
 
   }}
