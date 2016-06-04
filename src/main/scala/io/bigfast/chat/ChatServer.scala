@@ -27,6 +27,7 @@ object ChatServer {
 
 class ChatServer(executionContext: ExecutionContext) { self =>
   private[this] var server: Server = null
+  implicit val ec = executionContext
 
   private def start(): Unit = {
     //     server = ServerBuilder.forPort(HelloWorldServer.port).addService(GreeterGrpc.bindService(new GreeterImpl, executionContext)).build.start
@@ -65,6 +66,7 @@ class ChatServer(executionContext: ExecutionContext) { self =>
         override def onCompleted(): Unit = responseObserver.onCompleted()
 
         override def onNext(value: EventSubscription): Unit = {
+          println(value)
           responseObserver.onNext(Event("foo"))
         }
       }
