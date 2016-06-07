@@ -122,6 +122,9 @@ message CreateChannelResponse {
 }
 
 message EventSubscription {
+    int64 userId = 1;
+    int64 appId = 2;
+    int64 auth = 3;
 }
 
 // The chat service definition.
