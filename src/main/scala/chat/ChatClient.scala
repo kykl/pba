@@ -58,7 +58,7 @@ receive messages
 ChatImpl - ChatGRPCServer
 
 --> RUN THIS ON CONNECT
-subscribeEvents {
+subscribeEvents(requestObserver, historyLength) {
   BLAH BLAH CREATE ACTORSystem ->
     val systemName = "ChatApp"
     val system1 = ActorSystem(systemName)
@@ -70,6 +70,13 @@ subscribeEvents {
   val responseObserver = new StreamObserver[ChannelMessage] {
     onNext(channelMessage) = mediator ! Publish(channelMessage.channelId, channelMessage)
   }
+
+  # Presend history first
+  sql"Select * from messages where channelId == channelId order by desc limit historyLength".foreach { message =>
+    responseObserver.onNext(channelMessage)
+  }
+
+  # Hook up actor and let the pipe run
   val actor = system1.actorOf(ChatClient.props("userId", responseObserver)
 
 }

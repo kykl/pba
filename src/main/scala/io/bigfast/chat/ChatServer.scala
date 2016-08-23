@@ -2,6 +2,7 @@ package io.bigfast.chat
 
 import java.util.logging.Logger
 
+import io.bigfast.chat.Channel.{Create, Get, Message}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
 
@@ -59,22 +60,32 @@ class ChatServer(executionContext: ExecutionContext) { self =>
 
   private class ChatImpl extends ChatGrpc.Chat {
 
-    override def subscribeEvents(responseObserver: StreamObserver[Event]): StreamObserver[EventSubscription] = {
-      new StreamObserver[EventSubscription] {
+    override def channelMessageStream(responseObserver: StreamObserver[Message]): StreamObserver[Message] = {
+      new StreamObserver[Channel.Message] {
         override def onError(t: Throwable): Unit = println(t)
 
         override def onCompleted(): Unit = responseObserver.onCompleted()
 
-        override def onNext(value: EventSubscription): Unit = {
-          println(value)
-          responseObserver.onNext(Event("foo"))
+        override def onNext(message: Message): Unit = {
+          println(message)
+          val responseMessage = message.copy(content = "pong")
+          responseObserver.onNext(responseMessage)
         }
       }
     }
 
-    override def createChannel(request: CreateChannelRequest): Future[CreateChannelResponse] = Future {
-      println(s"Creating channel: name - ${request.name} | desc - ${request.description}")
-      CreateChannelResponse(channelId = 123L, request = Some(request))
+    override def createChannel(request: Create): Future[Channel] = Future {
+      println(s"Creating channel ${request.channelId}")
+      Channel(request.channelId)
+    }
+
+    override def channelHistory(request: Get): Future[Channel] = Future {
+      println(s"Returning channel history for channel ${request.channelId}")
+      val messages = Seq(
+        Message(request.channelId, 2L, "ping"),
+        Message(request.channelId, 2L, "pong")
+      )
+      Channel(request.channelId, messages)
     }
 
   }}
