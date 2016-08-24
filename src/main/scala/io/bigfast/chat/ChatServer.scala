@@ -2,10 +2,9 @@ package io.bigfast.chat
 
 import java.util.logging.Logger
 
-import io.bigfast.chat.Channel.{Create, Get, Message}
+import io.bigfast.chat.Channel.{Get, Message}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
-import com.google.protobuf.empty.Empty
 import io.bigfast.chat.Channel.Subscription.{Add, Remove}
 
 import scala.concurrent.{ExecutionContext, Future}

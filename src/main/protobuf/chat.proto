@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package io.bigfast;
 
-import "google/protobuf/empty.proto";
+message Empty {}
 
 message Channel {
     message Message {
@@ -16,10 +16,6 @@ message Channel {
         uint64 channelId = 1;
         uint32 beforeTs = 2;
         uint32 batchSize = 3;
-    }
-
-    message Create {
-        uint64 channelId = 1;
     }
 
     message Subscription {
@@ -53,10 +49,10 @@ message Channel {
 // The chat service definition.
 service Chat {
     rpc ChannelMessageStream(stream Channel.Message) returns (stream Channel.Message) {}
-    rpc CreateChannel(google.protobuf.Empty) returns (Channel) {}
+    rpc CreateChannel(Empty) returns (Channel) {}
     rpc ChannelHistory(Channel.Get) returns (Channel) {}
 
-    rpc SubscribeChannel(Channel.Subscription.Add) returns (google.protobuf.Empty) {}
-    rpc UnsubscribeChannel(Channel.Subscription.Remove) returns (google.protobuf.Empty) {}
+    rpc SubscribeChannel(Channel.Subscription.Add) returns (Empty) {}
+    rpc UnsubscribeChannel(Channel.Subscription.Remove) returns (Empty) {}
 }
 
