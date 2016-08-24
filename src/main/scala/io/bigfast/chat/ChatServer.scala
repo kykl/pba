@@ -2,6 +2,9 @@ package io.bigfast.chat
 
 import java.util.logging.Logger
 
+import akka.actor.ActorSystem
+import akka.cluster.Cluster
+import akka.cluster.pubsub.DistributedPubSub
 import io.bigfast.chat.Channel.{Get, Message}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
@@ -30,6 +33,12 @@ object ChatServer {
 class ChatServer(executionContext: ExecutionContext) { self =>
   private[this] var server: Server = null
   implicit val ec = executionContext
+
+  // Join akka pubsub cluster
+  val systemName = "DistributedMessaging"
+  val system = ActorSystem(systemName)
+  val joinAddress = Cluster(system).selfAddress
+  Cluster(system).join(joinAddress)
 
   private def start(): Unit = {
     //     server = ServerBuilder.forPort(HelloWorldServer.port).addService(GreeterGrpc.bindService(new GreeterImpl, executionContext)).build.start
