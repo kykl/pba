@@ -1,7 +1,6 @@
 package chat
 
-import akka.actor.Actor
-import akka.actor.Props
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.{ask, pipe}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Subscribe}
@@ -13,11 +12,17 @@ object ChatClient {
   case class Message(from: String, text: String)
 }
 
-class ChatClient(name: String) extends Actor {
+class ChatClient(name: String) extends Actor with ActorLogging {
   val mediator = DistributedPubSub(context.system).mediator
   val topic = "chatroom"
   mediator ! Subscribe(topic, self)
   println(s"$name joined chat room")
+
+  val channels = Seq("apples", "oranges")
+
+  channels.foreach { channel =>
+    mediator ! Subscribe(channel, self)
+  }
 
   def receive = {
     case ChatClient.Publish(msg) =>
