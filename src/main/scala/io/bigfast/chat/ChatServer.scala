@@ -5,6 +5,8 @@ import java.util.logging.Logger
 import io.bigfast.chat.Channel.{Create, Get, Message}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
+import com.google.protobuf.empty.Empty
+import io.bigfast.chat.Channel.Subscription.{Add, Remove}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -74,18 +76,29 @@ class ChatServer(executionContext: ExecutionContext) { self =>
       }
     }
 
-    override def createChannel(request: Create): Future[Channel] = Future {
-      println(s"Creating channel ${request.channelId}")
-      Channel(request.channelId)
+    override def createChannel(request: Empty): Future[Channel] = Future {
+      val channel = Channel(1L)
+      println(s"Creating channel ${channel.id}")
+      channel
     }
 
     override def channelHistory(request: Get): Future[Channel] = Future {
       println(s"Returning channel history for channel ${request.channelId}")
       val messages = Seq(
-        Message(request.channelId, 2L, "ping"),
-        Message(request.channelId, 2L, "pong")
+        Message(id = 1L, channelId = request.channelId, userId = 2L, content = "ping"),
+        Message(id = 2L, channelId = request.channelId, userId = 2L, content = "ping")
       )
       Channel(request.channelId, messages)
+    }
+
+    override def subscribeChannel(request: Add): Future[Empty] = Future {
+      println(s"Subscribing to channel ${request.channelId} for user ${request.userId}")
+      Empty.defaultInstance
+    }
+
+    override def unsubscribeChannel(request: Remove): Future[Empty] = Future {
+      println(s"Unsubscribing to channel ${request.channelId} for user ${request.userId}")
+      Empty.defaultInstance
     }
 
   }}

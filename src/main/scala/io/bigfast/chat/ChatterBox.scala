@@ -46,19 +46,24 @@ class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBl
       }
 
       override def onNext(value: Message): Unit = {
-        println("Message: " + value.content)
+        println(s"Message: $value")
       }
     }
 
     val requestObserver = asyncStub.channelMessageStream(r)
 
-    requestObserver.onNext(Message(1, 2, "ping"))
+
+    println(s"Testing messaging")
+    requestObserver.onNext(Message(channelId = 1, userId = 2, content = "ping"))
     Thread.sleep(Random.nextInt(1000) + 500)
-    requestObserver.onNext(Message(1, 2, "ping"))
+    requestObserver.onNext(Message(channelId = 1, userId = 2, content = "ping"))
     Thread.sleep(Random.nextInt(1000) + 500)
 
     requestObserver.onCompleted()
 
+    println(s"Testing blocking calls")
+    val channel = blockingStub.channelHistory(Channel.Get(1L))
+    println(s"Got channel $channel")
     r
   }
 
