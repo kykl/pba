@@ -6,7 +6,6 @@ import akka.actor.ActorSystem
 import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
-import chat.ChatClient.Publish
 import io.bigfast.chat.Channel.{Get, Message}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
@@ -25,7 +24,6 @@ object ChatServer {
 
   def main(args: Array[String]): Unit = {
     val server = new ChatServer(ExecutionContext.global)
-    server.joinCluster()
     server.start()
     server.blockUntilShutdown()
   }
@@ -34,7 +32,7 @@ object ChatServer {
 }
 
 class ChatServer(executionContext: ExecutionContext) { self =>
-  private[this] var server: Server = null
+  private[this] var server: Server = _
   implicit val ec = executionContext
 
   // Join akka pubsub cluster
