@@ -24,10 +24,7 @@ class ChatClient(name: String, mediator: ActorRef, streamObserver: StreamObserve
 
   def receive = {
     case message: Message =>
-      println(s"Message from akka topic: $message")
-      val alteredMessage = message.copy(content = "pong")
-      println(s"Replying with altered message: $alteredMessage")
-      streamObserver.onNext(alteredMessage)
+      streamObserver.onNext(message)
   }
 }
 
