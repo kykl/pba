@@ -14,7 +14,7 @@ object ChatClient {
 
 class ChatClient(name: String) extends Actor with ActorLogging {
   val mediator = DistributedPubSub(context.system).mediator
-  val topic = "chatroom"
+  val topic = s"control-$name"
   mediator ! Subscribe(topic, self)
   println(s"$name joined chat room")
 
