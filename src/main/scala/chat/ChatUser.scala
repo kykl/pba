@@ -3,10 +3,12 @@ package chat
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import akka.cluster.pubsub.DistributedPubSub
-import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Subscribe, Unsubscribe}
+import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Subscribe, SubscribeAck, Unsubscribe}
 import io.bigfast.chat.Channel
 import io.bigfast.chat.Channel.Message
 import io.grpc.stub.StreamObserver
+
+import scala.concurrent.Future
 
 /*
 ChatUser represents the Actor for a basic user in the messaging system
@@ -31,5 +33,7 @@ class ChatUser(name: String, mediator: ActorRef, streamObserver: StreamObserver[
       mediator ! Subscribe(subscriptionAdd.channelId.toString, self)
     case subscriptionRemove: Channel.Subscription.Remove =>
       mediator ! Unsubscribe(subscriptionRemove.channelId.toString, self)
+    case subscriptionAdded: SubscribeAck =>
+      // TODO: create a stream for listening to subscribe/unsubscribe events?
   }
 }
