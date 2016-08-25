@@ -6,7 +6,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
-import chat.ChatClient
+import chat.ChatUser
 import io.bigfast.chat.Channel.{Get, Message}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
@@ -75,7 +75,9 @@ class ChatServer(executionContext: ExecutionContext) { self =>
   private class ChatImpl extends ChatGrpc.Chat {
 
     override def channelMessageStream(responseObserver: StreamObserver[Message]): StreamObserver[Message] = {
-      system.actorOf(ChatClient.props("user123", mediator, responseObserver))
+      // TODO: get userId from auth somehow
+      system.actorOf(ChatUser.props("user123", mediator, responseObserver))
+
       new StreamObserver[Channel.Message] {
         override def onError(t: Throwable): Unit = println(t)
 
@@ -106,11 +108,15 @@ class ChatServer(executionContext: ExecutionContext) { self =>
 
     override def subscribeChannel(request: Add): Future[Empty] = Future {
       println(s"Subscribing to channel ${request.channelId} for user ${request.userId}")
+      val adminTopic = ChatUser.adminTopic(request.userId.toString)
+      mediator ! Publish(adminTopic, Add(request.channelId, request.userId))
       Empty.defaultInstance
     }
 
     override def unsubscribeChannel(request: Remove): Future[Empty] = Future {
       println(s"Unsubscribing to channel ${request.channelId} for user ${request.userId}")
+      val adminTopic = ChatUser.adminTopic(request.userId.toString)
+      mediator ! Publish(adminTopic, Remove(request.channelId, request.userId))
       Empty.defaultInstance
     }
 

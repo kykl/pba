@@ -22,9 +22,9 @@ class ChatClientSpec(_system: ActorSystem)
   "A ChatClient" should "publish messages to chatroom topic" in {
     val mediator = DistributedPubSub(system).mediator
     mediator ! Subscribe("chatroom", testActor)
-    val chatClient = system.actorOf(ChatClient.props("user1"))
-    chatClient ! ChatClient.Publish("hello")
-    val msg = expectMsgType[ChatClient.Message]
+    val chatClient = system.actorOf(ChatUser.props("user1"))
+    chatClient ! ChatUser.Publish("hello")
+    val msg = expectMsgType[ChatUser.Message]
     msg.from should be("user1")
     msg.text should be("hello")
   }
