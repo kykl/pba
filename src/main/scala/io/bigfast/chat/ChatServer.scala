@@ -5,6 +5,8 @@ import java.util.logging.Logger
 import akka.actor.ActorSystem
 import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
+import akka.cluster.pubsub.DistributedPubSubMediator.Publish
+import chat.ChatClient.Publish
 import io.bigfast.chat.Channel.{Get, Message}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
@@ -23,6 +25,7 @@ object ChatServer {
 
   def main(args: Array[String]): Unit = {
     val server = new ChatServer(ExecutionContext.global)
+    server.joinCluster()
     server.start()
     server.blockUntilShutdown()
   }
@@ -39,6 +42,8 @@ class ChatServer(executionContext: ExecutionContext) { self =>
   val system = ActorSystem(systemName)
   val joinAddress = Cluster(system).selfAddress
   Cluster(system).join(joinAddress)
+
+  val mediator = DistributedPubSub(system).mediator
 
   private def start(): Unit = {
     //     server = ServerBuilder.forPort(HelloWorldServer.port).addService(GreeterGrpc.bindService(new GreeterImpl, executionContext)).build.start
@@ -77,9 +82,9 @@ class ChatServer(executionContext: ExecutionContext) { self =>
         override def onCompleted(): Unit = responseObserver.onCompleted()
 
         override def onNext(message: Message): Unit = {
-          println(message)
-          val responseMessage = message.copy(content = "pong")
-          responseObserver.onNext(responseMessage)
+          println(s"Got Message: $message")
+          //TODO: check if channelId subscribed
+          mediator ! Publish(message.channelId.toString, message)
         }
       }
     }
