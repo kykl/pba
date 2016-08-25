@@ -28,17 +28,6 @@ message Channel {
             uint64 channelId = 1;
             uint64 userId = 2;
         }
-
-        message Get {
-            uint64 channelId = 1;
-            uint32 batchSize = 2;
-            enum SortBy {
-                RECENT = 0;
-                VOLUME = 1;
-            }
-        }
-
-        repeated uint64 users = 1;
     }
 
     uint64 id = 1;
