@@ -1,36 +1,30 @@
 package chat
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.{Publish, Subscribe}
+import io.bigfast.chat.Channel.Message
+import io.grpc.stub.StreamObserver
 
 object ChatClient {
-  def props(name: String): Props = Props(classOf[ChatClient], name)
-
-  case class Publish(msg: String)
-  case class Message(from: String, text: String)
+  def props(name: String, mediator: ActorRef, streamObserver: StreamObserver[Message]): Props = Props(classOf[ChatClient], name, mediator, streamObserver)
 }
 
-class ChatClient(name: String) extends Actor with ActorLogging {
-  val mediator = DistributedPubSub(context.system).mediator
+class ChatClient(name: String, mediator: ActorRef, streamObserver: StreamObserver[Message]) extends Actor with ActorLogging {
   val topic = s"control-$name"
   mediator ! Subscribe(topic, self)
   println(s"$name joined chat room")
 
-  val channels = Seq("apples", "oranges")
+  val channels = Seq(1.toString, 2.toString)
 
   channels.foreach { channel =>
     mediator ! Subscribe(channel, self)
   }
 
   def receive = {
-    case ChatClient.Publish(msg) =>
-      mediator ! Publish(topic, ChatClient.Message(name, msg))
-
-    case ChatClient.Message(from, text) =>
-      val direction = if (sender == self) ">>>>" else s"<< $from:"
-      println(s"$name $direction $text")
+    case message: Message =>
+      streamObserver.onNext(message)
   }
 
 }

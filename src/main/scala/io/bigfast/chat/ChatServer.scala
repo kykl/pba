@@ -2,10 +2,11 @@ package io.bigfast.chat
 
 import java.util.logging.Logger
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
+import chat.ChatClient
 import io.bigfast.chat.Channel.{Get, Message}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
@@ -74,7 +75,7 @@ class ChatServer(executionContext: ExecutionContext) { self =>
   private class ChatImpl extends ChatGrpc.Chat {
 
     override def channelMessageStream(responseObserver: StreamObserver[Message]): StreamObserver[Message] = {
-      new StreamObserver[Channel.Message] {
+      val requestObserver = new StreamObserver[Channel.Message] {
         override def onError(t: Throwable): Unit = println(t)
 
         override def onCompleted(): Unit = responseObserver.onCompleted()
@@ -85,6 +86,8 @@ class ChatServer(executionContext: ExecutionContext) { self =>
           mediator ! Publish(message.channelId.toString, message)
         }
       }
+      system.actorOf(ChatClient.props("user123", mediator, requestObserver))
+      requestObserver
     }
 
     override def createChannel(request: Empty): Future[Channel] = Future {
