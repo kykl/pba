@@ -24,12 +24,6 @@ class ChatUser(name: String, mediator: ActorRef, streamObserver: StreamObserver[
   mediator ! Subscribe(topic, self)
   println(s"$name joined chat room")
 
-  val channels = Seq(1.toString, 2.toString)
-
-  channels.foreach { channel =>
-    mediator ! Subscribe(channel, self)
-  }
-
   def receive = {
     case message: Message =>
       streamObserver.onNext(message)
