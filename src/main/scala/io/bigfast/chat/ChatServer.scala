@@ -92,16 +92,17 @@ class ChatServer(executionContext: ExecutionContext) { self =>
     }
 
     override def createChannel(request: Empty): Future[Channel] = Future {
-      val channel = Channel(1L)
+      val channel = Channel("1")
       println(s"Creating channel ${channel.id}")
       channel
     }
 
     override def channelHistory(request: Get): Future[Channel] = Future {
       println(s"Returning channel history for channel ${request.channelId}")
+      val msg = ChatterBox.encodeJsonAsByteString("{text: 'ping'}")
       val messages = Seq(
-        Message(id = 1L, channelId = request.channelId, userId = 2L, content = "ping"),
-        Message(id = 2L, channelId = request.channelId, userId = 2L, content = "ping")
+        Message(id = "1", channelId = request.channelId, userId = "2", content = msg),
+        Message(id = "2", channelId = request.channelId, userId = "2", content = msg)
       )
       Channel(request.channelId, messages)
     }

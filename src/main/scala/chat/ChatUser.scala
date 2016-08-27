@@ -30,9 +30,9 @@ class ChatUser(name: String, mediator: ActorRef, streamObserver: StreamObserver[
     case message: Message =>
       streamObserver.onNext(message)
     case subscriptionAdd: Channel.Subscription.Add =>
-      mediator ! Subscribe(subscriptionAdd.channelId.toString, self)
+      mediator ! Subscribe(subscriptionAdd.channelId, self)
     case subscriptionRemove: Channel.Subscription.Remove =>
-      mediator ! Unsubscribe(subscriptionRemove.channelId.toString, self)
+      mediator ! Unsubscribe(subscriptionRemove.channelId, self)
     case subscriptionAdded: SubscribeAck =>
       // TODO: create a stream for listening to subscribe/unsubscribe events?
   }
