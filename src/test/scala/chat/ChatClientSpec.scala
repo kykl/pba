@@ -19,14 +19,14 @@ class ChatClientSpec(_system: ActorSystem)
 
   override def afterAll: Unit = Await.ready(system.terminate(), Duration.Inf)
 
-  "A ChatClient" should "publish messages to chatroom topic" in {
-    val mediator = DistributedPubSub(system).mediator
-    mediator ! Subscribe("chatroom", testActor)
-    val chatClient = system.actorOf(ChatUser.props("user1"))
-    chatClient ! ChatUser.Publish("hello")
-    val msg = expectMsgType[ChatUser.Message]
-    msg.from should be("user1")
-    msg.text should be("hello")
-  }
+//  "A ChatClient" should "publish messages to chatroom topic" in {
+//    val mediator = DistributedPubSub(system).mediator
+//    mediator ! Subscribe("chatroom", testActor)
+//    val chatClient = system.actorOf(ChatUser.props("user1"))
+//    chatClient ! ChatUser.Publish("hello")
+//    val msg = expectMsgType[ChatUser.Message]
+//    msg.from should be("user1")
+//    msg.text should be("hello")
+//  }
 
 }
