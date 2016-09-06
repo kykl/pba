@@ -1,5 +1,6 @@
 package io.bigfast.chat
 
+import java.util.Base64
 import java.util.logging.Logger
 
 import akka.actor.{ActorSystem, Props}
@@ -84,8 +85,10 @@ class ChatServer(executionContext: ExecutionContext) { self =>
         override def onCompleted(): Unit = responseObserver.onCompleted()
 
         override def onNext(message: Message): Unit = {
-          println(s"Got Message: $message")
-          //TODO: check if channelId subscribed
+          val messageByteString = message.content.toByteArray
+          val dec = Base64.getDecoder
+          val b64String = new String(dec.decode(messageByteString))
+          println(s"Server Got Message: $b64String")
           mediator ! Publish(message.channelId.toString, message)
         }
       }

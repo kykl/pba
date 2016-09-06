@@ -55,10 +55,10 @@ class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBl
       }
 
       override def onNext(value: Message): Unit = {
-        println(s"Message: $value")
-        val shiz = ByteString.copyFrom("{hello: 'HI'}", "UTF-8")
-        val enc = Base64.getEncoder
-        enc.encodeToString(shiz.toByteArray)
+        val messageByteString = value.content.toByteArray
+        val dec = Base64.getDecoder
+        val b64String = new String(dec.decode(messageByteString))
+        println(s"Client Receive Message: $b64String")
       }
     }
 
