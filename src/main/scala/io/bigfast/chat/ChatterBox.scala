@@ -27,7 +27,7 @@ object ChatterBox {
     val chatterBox = ChatterBox()
 
     try {
-      val response = chatterBox.subscribe("my channel")
+      val response = chatterBox.connectStream("my channel")
     }
     catch {
       case t:Throwable =>
@@ -50,7 +50,7 @@ object ChatterBox {
 }
 
 class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBlockingStub, asyncStub: ChatGrpc.ChatStub) {
-  def subscribe(ch:String):StreamObserver[Message] = {
+  def connectStream(userId: String): StreamObserver[Message] = {
     val r = new StreamObserver[Message] {
       override def onError(t: Throwable): Unit = {
         println(t)
@@ -70,7 +70,7 @@ class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBl
 
 
     println(s"Testing messaging")
-    val msg = "{text: 'ping'}"
+    val msg = "{'text':'hello there!'}"
     val byteString = ChatterBox.encodeJsonAsByteString(msg)
     requestObserver.onNext(Message(channelId = "1", userId = "2", content = byteString))
     Thread.sleep(Random.nextInt(1000) + 500)
