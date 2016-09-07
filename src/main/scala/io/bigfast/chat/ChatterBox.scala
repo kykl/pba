@@ -18,13 +18,12 @@ import scala.util.Random
 object ChatterBox {
   def apply(host:String = "localhost", port:Int = 50051):ChatterBox = {
     val builder = ManagedChannelBuilder.forAddress(host, port)
-    builder.usePlaintext(true)
     val channel = builder.build()
     new ChatterBox(channel, ChatGrpc.blockingStub(channel), ChatGrpc.stub(channel))
   }
 
   def main(args:Array[String]) = {
-    val chatterBox = ChatterBox()
+    val chatterBox = ChatterBox(host = "messaging.rndmi.com")
 
     try {
       val response = chatterBox.connectStream("my channel")
