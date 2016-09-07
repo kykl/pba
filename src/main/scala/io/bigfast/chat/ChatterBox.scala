@@ -16,7 +16,7 @@ import scala.util.Random
   */
 
 object ChatterBox {
-  def apply(host:String = "localhost", port:Int = 50051):ChatterBox = {
+  def apply(host:String = "localhost", port:Int = 8443):ChatterBox = {
     val builder = ManagedChannelBuilder.forAddress(host, port)
     val channel = builder.build()
     new ChatterBox(channel, ChatGrpc.blockingStub(channel), ChatGrpc.stub(channel))

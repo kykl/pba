@@ -72,3 +72,5 @@ tm*.lck
 tm*.log
 tm.out
 worker*.log
+*.crt
+*.pem

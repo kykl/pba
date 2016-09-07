@@ -12,6 +12,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
   "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % "0.5.38",
   "io.grpc" % "grpc-all" % "1.0.0",
+  "io.netty" % "netty-tcnative-boringssl-static" % "1.1.33.Fork22",
   "org.scalatest" %% "scalatest" % "2.1.6" % "test")
 
 import com.trueaccord.scalapb.{ScalaPbPlugin => PB}

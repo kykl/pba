@@ -1,5 +1,6 @@
 package io.bigfast.chat
 
+import java.io.File
 import java.util.Base64
 import java.util.logging.Logger
 
@@ -23,7 +24,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object ChatServer {
   private val logger = Logger.getLogger(classOf[ChatServer].getName)
-  private val port = 50051
+  private val port = 8443
 
   def main(args: Array[String]): Unit = {
     val server = new ChatServer(ExecutionContext.global)
@@ -46,7 +47,9 @@ class ChatServer(executionContext: ExecutionContext) {
   private def start(): Unit = {
     //     server = ServerBuilder.forPort(HelloWorldServer.port).addService(GreeterGrpc.bindService(new GreeterImpl, executionContext)).build.start
 
-    server = ServerBuilder.forPort(ChatServer.port).addService(ChatGrpc.bindService(new ChatImpl, executionContext)).build.start
+    val certFile = new File("/Users/andy/code/mva/cert-chain.crt")
+    val privateKey = new File("/Users/andy/code/mva/private-key.pem")
+    server = ServerBuilder.forPort(ChatServer.port).useTransportSecurity(certFile, privateKey).addService(ChatGrpc.bindService(new ChatImpl, executionContext)).build.start
 
     ChatServer.logger.info("Server started, listening on " + ChatServer.port)
     Runtime.getRuntime.addShutdownHook(new Thread() {
