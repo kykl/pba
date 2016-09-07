@@ -41,6 +41,12 @@ object ChatterBox {
     ByteString.copyFrom(b64String, StandardCharsets.UTF_8)
   }
 
+  def decodeByteStringAsJson(byteString: ByteString): String = {
+    val messageByteString = byteString.toByteArray
+    val dec = Base64.getDecoder
+    new String(dec.decode(messageByteString))
+  }
+
 }
 
 class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBlockingStub, asyncStub: ChatGrpc.ChatStub) {
@@ -54,10 +60,8 @@ class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBl
         println("Completed")
       }
 
-      override def onNext(value: Message): Unit = {
-        val messageByteString = value.content.toByteArray
-        val dec = Base64.getDecoder
-        val b64String = new String(dec.decode(messageByteString))
+      override def onNext(message: Message): Unit = {
+        val b64String = ChatterBox.decodeByteStringAsJson(message.content)
         println(s"Client Receive Message: $b64String")
       }
     }
@@ -67,10 +71,10 @@ class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBl
 
     println(s"Testing messaging")
     val msg = "{text: 'ping'}"
-    val msgByteSTring = ChatterBox.encodeJsonAsByteString(msg)
-    requestObserver.onNext(Message(channelId = "1", userId = "2", content = msgByteSTring))
+    val byteString = ChatterBox.encodeJsonAsByteString(msg)
+    requestObserver.onNext(Message(channelId = "1", userId = "2", content = byteString))
     Thread.sleep(Random.nextInt(1000) + 500)
-    requestObserver.onNext(Message(channelId = "1", userId = "2", content = msgByteSTring))
+    requestObserver.onNext(Message(channelId = "1", userId = "2", content = byteString))
     Thread.sleep(Random.nextInt(1000) + 500)
 
     requestObserver.onCompleted()
