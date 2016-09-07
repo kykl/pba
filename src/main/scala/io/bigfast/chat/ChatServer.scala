@@ -3,15 +3,15 @@ package io.bigfast.chat
 import java.util.Base64
 import java.util.logging.Logger
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import chat.ChatUser
+import io.bigfast.chat.Channel.Subscription.{Add, Remove}
 import io.bigfast.chat.Channel.{Get, Message}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
-import io.bigfast.chat.Channel.Subscription.{Add, Remove}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -23,33 +23,30 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object ChatServer {
   private val logger = Logger.getLogger(classOf[ChatServer].getName)
+  private val port = 50051
 
   def main(args: Array[String]): Unit = {
     val server = new ChatServer(ExecutionContext.global)
     server.start()
     server.blockUntilShutdown()
   }
-
-  private val port = 50051
 }
 
-class ChatServer(executionContext: ExecutionContext) { self =>
-  private[this] var server: Server = _
+class ChatServer(executionContext: ExecutionContext) {
+  self =>
   implicit val ec = executionContext
-
   // Join akka pubsub cluster
   val systemName = "DistributedMessaging"
   val system = ActorSystem(systemName)
   val joinAddress = Cluster(system).selfAddress
-  Cluster(system).join(joinAddress)
-
   val mediator = DistributedPubSub(system).mediator
+  Cluster(system).join(joinAddress)
+  private[this] var server: Server = _
 
   private def start(): Unit = {
     //     server = ServerBuilder.forPort(HelloWorldServer.port).addService(GreeterGrpc.bindService(new GreeterImpl, executionContext)).build.start
 
     server = ServerBuilder.forPort(ChatServer.port).addService(ChatGrpc.bindService(new ChatImpl, executionContext)).build.start
-      //.addService(ChatGrpc.bindService(new ChatImpl(), executionContext)
 
     ChatServer.logger.info("Server started, listening on " + ChatServer.port)
     Runtime.getRuntime.addShutdownHook(new Thread() {
@@ -124,4 +121,5 @@ class ChatServer(executionContext: ExecutionContext) { self =>
       Empty.defaultInstance
     }
 
-  }}
+  }
+}
