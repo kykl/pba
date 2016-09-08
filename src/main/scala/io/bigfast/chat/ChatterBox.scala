@@ -26,7 +26,7 @@ object ChatterBox {
     val chatterBox = ChatterBox(host = "messaging.rndmi.com")
 
     try {
-      val response = chatterBox.connectStream("my channel")
+      chatterBox.connectStream("my channel")
     }
     catch {
       case t:Throwable =>
