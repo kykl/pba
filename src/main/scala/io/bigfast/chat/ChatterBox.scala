@@ -22,7 +22,7 @@ object ChatterBox {
     new ChatterBox(channel, ChatGrpc.blockingStub(channel), ChatGrpc.stub(channel))
   }
 
-  def main(args:Array[String]) = {
+  def main(args:Array[String]): Unit = {
     val chatterBox = ChatterBox(host = "messaging.rndmi.com")
 
     try {
