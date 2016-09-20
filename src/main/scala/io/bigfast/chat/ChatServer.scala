@@ -47,8 +47,8 @@ class ChatServer(executionContext: ExecutionContext) {
   private def start(): Unit = {
     //     server = ServerBuilder.forPort(HelloWorldServer.port).addService(GreeterGrpc.bindService(new GreeterImpl, executionContext)).build.start
 
-    val certFile = new File("/Users/andy/code/mva/cert-chain.crt")
-    val privateKey = new File("/Users/andy/code/mva/private-key.pem")
+    val certFile = new File("cert-chain.crt")
+    val privateKey = new File("private-key.pem")
     server = ServerBuilder.forPort(ChatServer.port).useTransportSecurity(certFile, privateKey).addService(ChatGrpc.bindService(new ChatImpl, executionContext)).build.start
 
     ChatServer.logger.info("Server started, listening on " + ChatServer.port)
