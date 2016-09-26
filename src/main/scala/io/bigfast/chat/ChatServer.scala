@@ -11,8 +11,8 @@ import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import chat.ChatUser
 import io.bigfast.chat.Channel.Subscription.{Add, Remove}
 import io.bigfast.chat.Channel.{Get, Message}
-import io.grpc.stub.StreamObserver
-import io.grpc.{Server, ServerBuilder}
+import io.grpc.stub.{MetadataUtils, StreamObserver}
+import io.grpc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -49,7 +49,17 @@ class ChatServer(executionContext: ExecutionContext) {
 
     val certFile = new File("cert-chain.crt")
     val privateKey = new File("private-key.pem")
-    server = ServerBuilder.forPort(ChatServer.port).useTransportSecurity(certFile, privateKey).addService(ChatGrpc.bindService(new ChatImpl, executionContext)).build.start
+    server = ServerBuilder
+      .forPort(ChatServer.port)
+      .useTransportSecurity(certFile, privateKey)
+      .addService(
+        ServerInterceptors.intercept(
+          ChatGrpc.bindService(new ChatImpl, executionContext),
+          new HeaderServerInterceptor
+        )
+      )
+      .build
+      .start
 
     ChatServer.logger.info("Server started, listening on " + ChatServer.port)
     Runtime.getRuntime.addShutdownHook(new Thread() {
@@ -76,8 +86,11 @@ class ChatServer(executionContext: ExecutionContext) {
   private class ChatImpl extends ChatGrpc.Chat {
 
     override def channelMessageStream(responseObserver: StreamObserver[Message]): StreamObserver[Message] = {
+      val userId: String = Context.key("AUTHORIZATION").get()
+      println(s"Got userId: $userId")
       // TODO: get userId from auth somehow
       system.actorOf(ChatUser.props("user123", mediator, responseObserver))
+
 
       new StreamObserver[Channel.Message] {
         override def onError(t: Throwable): Unit = println(t)
