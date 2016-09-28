@@ -1,7 +1,7 @@
 package io.bigfast.chat
 
 import java.io.File
-import java.util.Base64
+import java.util.{Base64, UUID}
 import java.util.logging.Logger
 
 import akka.actor.ActorSystem
@@ -11,8 +11,8 @@ import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import chat.ChatUser
 import io.bigfast.chat.Channel.Subscription.{Add, Remove}
 import io.bigfast.chat.Channel.{Get, Message}
-import io.grpc.stub.{MetadataUtils, StreamObserver}
 import io.grpc._
+import io.grpc.stub.StreamObserver
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -86,10 +86,10 @@ class ChatServer(executionContext: ExecutionContext) {
   private class ChatImpl extends ChatGrpc.Chat {
 
     override def channelMessageStream(responseObserver: StreamObserver[Message]): StreamObserver[Message] = {
-      val userId: String = Context.key("AUTHORIZATION").get()
+      val userId: String = HeaderServerInterceptor.contextKey.get()
       println(s"Got userId: $userId")
       // TODO: get userId from auth somehow
-      system.actorOf(ChatUser.props("user123", mediator, responseObserver))
+      system.actorOf(ChatUser.props(userId, mediator, responseObserver))
 
 
       new StreamObserver[Channel.Message] {
@@ -108,7 +108,8 @@ class ChatServer(executionContext: ExecutionContext) {
     }
 
     override def createChannel(request: Empty): Future[Channel] = Future {
-      val channel = Channel("1")
+      val channelId = UUID.randomUUID().toString
+      val channel = Channel(channelId)
       println(s"Creating channel ${channel.id}")
       channel
     }
@@ -117,8 +118,8 @@ class ChatServer(executionContext: ExecutionContext) {
       println(s"Returning channel history for channel ${request.channelId}")
       val msg = ChatterBox.encodeJsonAsByteString("{text: 'ping'}")
       val messages = Seq(
-        Message(id = "1", channelId = request.channelId, userId = "2", content = msg),
-        Message(id = "2", channelId = request.channelId, userId = "2", content = msg)
+        Message(id = "1", channelId = request.channelId, userId = ChatterBox.userId, content = msg),
+        Message(id = "2", channelId = request.channelId, userId = ChatterBox.userId, content = msg)
       )
       Channel(request.channelId, messages)
     }
@@ -138,4 +139,5 @@ class ChatServer(executionContext: ExecutionContext) {
     }
 
   }
+
 }

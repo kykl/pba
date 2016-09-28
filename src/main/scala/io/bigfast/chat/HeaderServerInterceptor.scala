@@ -1,23 +1,18 @@
 package io.bigfast.chat
 
-import io.grpc.ForwardingServerCall.SimpleForwardingServerCall
+import io.grpc.Context.Key
 import io.grpc._
-import io.grpc.stub.MetadataUtils
 
 /**
   * Created by andy on 9/19/16.
   */
 class HeaderServerInterceptor extends ServerInterceptor {
-  private val customHeadKey = Metadata.Key.of("AUTHORIZATION", Metadata.ASCII_STRING_MARSHALLER)
 
   override def interceptCall[RespT, ReqT](call: ServerCall[RespT, ReqT], requestHeaders: Metadata, next: ServerCallHandler[RespT, ReqT]) = {
-    println(s"header received from client: $requestHeaders")
-    val authorization = requestHeaders.get[String](customHeadKey)
-
-    println(s"extracted auth header: $authorization")
+    val authorization = requestHeaders.get[String](HeaderServerInterceptor.metadataKey)
 
     val context = Context.current().withValue(
-      Context.key("AUTHORIZATION"),
+      HeaderServerInterceptor.contextKey,
       authorization
     )
 
@@ -28,4 +23,10 @@ class HeaderServerInterceptor extends ServerInterceptor {
       next
     )
   }
+}
+
+object HeaderServerInterceptor {
+  val metadataKey = Metadata.Key.of("AUTHORIZATION", Metadata.ASCII_STRING_MARSHALLER)
+
+  val contextKey: Key[String] = Context.key("AUTHORIZATION")
 }

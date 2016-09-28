@@ -2,15 +2,12 @@ package io.bigfast.chat
 
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-import java.util.concurrent.{Executor, TimeUnit}
+import java.util.concurrent.TimeUnit
 
-import com.google.auth.Credentials
 import com.google.protobuf.ByteString
-import io.bigfast.chat.Channel.Message
-import io.grpc.CallCredentials.MetadataApplier
-import io.grpc.stub.{MetadataUtils, StreamObserver}
+import io.bigfast.chat.Channel.{Message, Subscription}
 import io.grpc._
-import io.grpc.auth._
+import io.grpc.stub.{MetadataUtils, StreamObserver}
 
 import scala.util.Random
 
@@ -19,13 +16,15 @@ import scala.util.Random
   */
 
 object ChatterBox {
+  val userId = "user123"
+
   def apply(host:String = "localhost", port:Int = 8443):ChatterBox = {
     val builder = ManagedChannelBuilder.forAddress(host, port)
     val channel = builder.build()
     val metadata = new Metadata()
     metadata.put(
       Metadata.Key.of("AUTHORIZATION", Metadata.ASCII_STRING_MARSHALLER),
-      "HEYYO"
+      userId
     )
     val blockingStub = MetadataUtils.attachHeaders(
       ChatGrpc.blockingStub(channel),
@@ -83,20 +82,39 @@ class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBl
 
     val requestObserver = asyncStub.channelMessageStream(r)
 
+    println(s"Testing channel Create")
+    val chatChannel = blockingStub.createChannel(Empty())
+    println(s"Created channel with id ${chatChannel.id}")
+
+    println(s"Subscribing to channel ${chatChannel.id}")
+    blockingStub.subscribeChannel(Subscription.Add(
+      chatChannel.id,
+      ChatterBox.userId
+    ))
 
     println(s"Testing messaging")
     val msg = "{'text':'hello there!'}"
     val byteString = ChatterBox.encodeJsonAsByteString(msg)
-    requestObserver.onNext(Message(channelId = "1", userId = "2", content = byteString))
+    requestObserver.onNext(Message(
+      channelId = chatChannel.id,
+      userId = ChatterBox.userId,
+      content = byteString
+    ))
     Thread.sleep(Random.nextInt(1000) + 500)
-    requestObserver.onNext(Message(channelId = "1", userId = "2", content = byteString))
+    requestObserver.onNext(Message(
+      channelId = chatChannel.id,
+      userId = ChatterBox.userId,
+      content = byteString
+    ))
     Thread.sleep(Random.nextInt(1000) + 500)
 
     requestObserver.onCompleted()
 
     println(s"Testing blocking calls")
-    val channel = blockingStub.channelHistory(Channel.Get("1"))
+    val channel = blockingStub.channelHistory(Channel.Get(chatChannel.id))
     println(s"Got channel $channel")
+
+
     r
   }
 
