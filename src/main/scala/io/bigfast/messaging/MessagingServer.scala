@@ -17,10 +17,10 @@ import io.grpc.stub.StreamObserver
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Created by kykl on 6/1/16.
+  * MessagingServer
+  * Allowed injection of authentication mechanism
+  * 2 types of endpoints - user and privileged
   */
-
-// https://github.com/xuwei-k/grpc-scala-sample/blob/master/grpc-scala/src/main/scala/io/grpc/examples/helloworld/HelloWorldServer.scala
 
 object ChatServer {
   private val logger = Logger.getLogger(classOf[ChatServer].getName)
@@ -54,7 +54,7 @@ class ChatServer(executionContext: ExecutionContext) {
       .useTransportSecurity(certFile, privateKey)
       .addService(
         ServerInterceptors.intercept(
-          ChatGrpc.bindService(new ChatImpl, executionContext),
+          MessagingGrpc.bindService(new ChatImpl, executionContext),
           new HeaderServerInterceptor
         )
       )
@@ -83,7 +83,7 @@ class ChatServer(executionContext: ExecutionContext) {
     }
   }
 
-  private class ChatImpl extends ChatGrpc.Chat {
+  private class ChatImpl extends MessagingGrpc.Messaging {
 
     override def channelMessageStream(responseObserver: StreamObserver[Message]): StreamObserver[Message] = {
       val userId: String = HeaderServerInterceptor.contextKey.get()
@@ -137,7 +137,5 @@ class ChatServer(executionContext: ExecutionContext) {
       mediator ! Publish(adminTopic, Remove(request.channelId, request.userId))
       Empty.defaultInstance
     }
-
   }
-
 }

@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit
 import com.google.protobuf.ByteString
 import io.bigfast.messaging.Channel.{Message, Subscription}
 import io.grpc._
+import io.bigfast.messaging.MessagingGrpc._
 import io.grpc.stub.{MetadataUtils, StreamObserver}
 
 import scala.util.Random
@@ -27,11 +28,11 @@ object ChatterBox {
       userId
     )
     val blockingStub = MetadataUtils.attachHeaders(
-      ChatGrpc.blockingStub(channel),
+      MessagingGrpc.blockingStub(channel),
       metadata
     )
     val asyncStub = MetadataUtils.attachHeaders(
-      ChatGrpc.stub(channel),
+      MessagingGrpc.stub(channel),
       metadata
     )
     new ChatterBox(channel, blockingStub, asyncStub)
@@ -63,7 +64,7 @@ object ChatterBox {
 
 }
 
-class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBlockingStub, asyncStub: ChatGrpc.ChatStub) {
+class ChatterBox private (channel: ManagedChannel, blockingStub: MessagingBlockingStub, asyncStub: MessagingStub) {
   def connectStream(userId: String): StreamObserver[Message] = {
     val r = new StreamObserver[Message] {
       override def onError(t: Throwable): Unit = {
@@ -113,7 +114,6 @@ class ChatterBox private (channel: ManagedChannel, blockingStub: ChatGrpc.ChatBl
     println(s"Testing blocking calls")
     val channel = blockingStub.channelHistory(Channel.Get(chatChannel.id))
     println(s"Got channel $channel")
-
 
     r
   }
