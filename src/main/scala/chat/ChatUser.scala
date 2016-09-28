@@ -2,8 +2,8 @@ package chat
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.pubsub.DistributedPubSubMediator.{Subscribe, SubscribeAck, Unsubscribe}
-import io.bigfast.chat.Channel
-import io.bigfast.chat.Channel.Message
+import io.bigfast.messaging.Channel
+import io.bigfast.messaging.Channel.Message
 import io.grpc.stub.StreamObserver
 
 /*
@@ -20,7 +20,7 @@ object ChatUser {
 class ChatUser(name: String, mediator: ActorRef, streamObserver: StreamObserver[Message]) extends Actor with ActorLogging {
   val topic = ChatUser.adminTopic(name)
   mediator ! Subscribe(topic, self)
-  println(s"$name joined chat room")
+  println(s"$name subscribed $topic")
 
   def receive = {
     case message: Message =>

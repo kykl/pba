@@ -1,4 +1,4 @@
-package io.bigfast.chat
+package io.bigfast.messaging
 
 import io.grpc.Context.Key
 import io.grpc._

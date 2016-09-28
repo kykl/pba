@@ -1,11 +1,11 @@
-package io.bigfast.chat
+package io.bigfast.messaging
 
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 
 import com.google.protobuf.ByteString
-import io.bigfast.chat.Channel.{Message, Subscription}
+import io.bigfast.messaging.Channel.{Message, Subscription}
 import io.grpc._
 import io.grpc.stub.{MetadataUtils, StreamObserver}
 

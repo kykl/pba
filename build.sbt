@@ -1,4 +1,4 @@
-name := """chat-cluster"""
+name := """messaging-cluster"""
 
 version := "0.1"
 

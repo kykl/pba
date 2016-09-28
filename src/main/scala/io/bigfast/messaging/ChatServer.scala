@@ -1,4 +1,4 @@
-package io.bigfast.chat
+package io.bigfast.messaging
 
 import java.io.File
 import java.util.{Base64, UUID}
@@ -9,8 +9,8 @@ import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import chat.ChatUser
-import io.bigfast.chat.Channel.Subscription.{Add, Remove}
-import io.bigfast.chat.Channel.{Get, Message}
+import io.bigfast.messaging.Channel.Subscription.{Add, Remove}
+import io.bigfast.messaging.Channel.{Get, Message}
 import io.grpc._
 import io.grpc.stub.StreamObserver
 

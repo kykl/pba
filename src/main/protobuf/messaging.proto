@@ -34,8 +34,8 @@ message Channel {
     repeated Message messages = 2;
 }
 
-// The chat service definition.
-service Chat {
+// The messaging service definition.
+service Messaging {
     rpc ChannelMessageStream(stream Channel.Message) returns (stream Channel.Message) {}
     rpc CreateChannel(Empty) returns (Channel) {}
     rpc ChannelHistory(Channel.Get) returns (Channel) {}
