@@ -9,6 +9,7 @@ import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import chat.ChatUser
+import com.rndmi.messaging.MessagingClient
 import io.bigfast.messaging.Channel.Subscription.{Add, Remove}
 import io.bigfast.messaging.Channel.{Get, Message}
 import io.grpc._
@@ -22,18 +23,18 @@ import scala.concurrent.{ExecutionContext, Future}
   * 2 types of endpoints - user and privileged
   */
 
-object ChatServer {
-  private val logger = Logger.getLogger(classOf[ChatServer].getName)
+object MessagingServer {
+  private val logger = Logger.getLogger(classOf[MessagingServer].getName)
   private val port = 8443
 
   def main(args: Array[String]): Unit = {
-    val server = new ChatServer(ExecutionContext.global)
+    val server = new MessagingServer(ExecutionContext.global)
     server.start()
     server.blockUntilShutdown()
   }
 }
 
-class ChatServer(executionContext: ExecutionContext) {
+class MessagingServer(executionContext: ExecutionContext) {
   self =>
   implicit val ec = executionContext
   // Join akka pubsub cluster
@@ -45,12 +46,10 @@ class ChatServer(executionContext: ExecutionContext) {
   private[this] var server: Server = _
 
   private def start(): Unit = {
-    //     server = ServerBuilder.forPort(HelloWorldServer.port).addService(GreeterGrpc.bindService(new GreeterImpl, executionContext)).build.start
-
     val certFile = new File("cert-chain.crt")
     val privateKey = new File("private-key.pem")
     server = ServerBuilder
-      .forPort(ChatServer.port)
+      .forPort(MessagingServer.port)
       .useTransportSecurity(certFile, privateKey)
       .addService(
         ServerInterceptors.intercept(
@@ -61,7 +60,7 @@ class ChatServer(executionContext: ExecutionContext) {
       .build
       .start
 
-    ChatServer.logger.info("Server started, listening on " + ChatServer.port)
+    MessagingServer.logger.info("Server started, listening on " + MessagingServer.port)
     Runtime.getRuntime.addShutdownHook(new Thread() {
       override def run(): Unit = {
         System.err.println("*** shutting down gRPC server since JVM is shutting down")
@@ -88,7 +87,6 @@ class ChatServer(executionContext: ExecutionContext) {
     override def channelMessageStream(responseObserver: StreamObserver[Message]): StreamObserver[Message] = {
       val userId: String = HeaderServerInterceptor.contextKey.get()
       println(s"Got userId: $userId")
-      // TODO: get userId from auth somehow
       system.actorOf(ChatUser.props(userId, mediator, responseObserver))
 
 
@@ -116,23 +114,23 @@ class ChatServer(executionContext: ExecutionContext) {
 
     override def channelHistory(request: Get): Future[Channel] = Future {
       println(s"Returning channel history for channel ${request.channelId}")
-      val msg = ChatterBox.encodeJsonAsByteString("{text: 'ping'}")
+      val msg = MessagingClient.encodeJsonAsByteString("{text: 'ping'}")
       val messages = Seq(
-        Message(id = "1", channelId = request.channelId, userId = ChatterBox.userId, content = msg),
-        Message(id = "2", channelId = request.channelId, userId = ChatterBox.userId, content = msg)
+        Message(id = "1", channelId = request.channelId, userId = MessagingClient.userId, content = msg),
+        Message(id = "2", channelId = request.channelId, userId = MessagingClient.userId, content = msg)
       )
       Channel(request.channelId, messages)
     }
 
     override def subscribeChannel(request: Add): Future[Empty] = Future {
-      println(s"Subscribing to channel ${request.channelId} for user ${request.userId}")
+      println(s"Subscribe to channel ${request.channelId} for user ${request.userId}")
       val adminTopic = ChatUser.adminTopic(request.userId.toString)
       mediator ! Publish(adminTopic, Add(request.channelId, request.userId))
       Empty.defaultInstance
     }
 
     override def unsubscribeChannel(request: Remove): Future[Empty] = Future {
-      println(s"Unsubscribing to channel ${request.channelId} for user ${request.userId}")
+      println(s"Unsubscribe from channel ${request.channelId} for user ${request.userId}")
       val adminTopic = ChatUser.adminTopic(request.userId.toString)
       mediator ! Publish(adminTopic, Remove(request.channelId, request.userId))
       Empty.defaultInstance

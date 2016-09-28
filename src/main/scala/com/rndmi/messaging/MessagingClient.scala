@@ -1,4 +1,4 @@
-package io.bigfast.messaging
+package com.rndmi.messaging
 
 import java.nio.charset.StandardCharsets
 import java.util.Base64
@@ -6,27 +6,62 @@ import java.util.concurrent.TimeUnit
 
 import com.google.protobuf.ByteString
 import io.bigfast.messaging.Channel.{Message, Subscription}
-import io.grpc._
 import io.bigfast.messaging.MessagingGrpc._
+import io.bigfast.messaging.{Channel, Empty, MessagingGrpc}
+import io.grpc._
 import io.grpc.stub.{MetadataUtils, StreamObserver}
 
-import scala.util.Random
+import scala.io.Source
+import scala.util.{Failure, Random, Success, Try}
 
 /**
-  * Created by kykl on 8/16/16.
+  * MessagingClient
+  * Reference Scala implementation
+  * Uses netty (not realistic in Android/mobile)
+  * Create channel (privileged)
+  * Subscribe to channel (privileged)
+  * Connect to bidirectional stream
+  * Send message
+  * Should also receive messages
   */
 
-object ChatterBox {
-  val userId = "user123"
+object MessagingClient {
+  // Hardcoded from rndmi internal auth
+  val userId = "18125"
 
-  def apply(host:String = "localhost", port:Int = 8443):ChatterBox = {
+  def main(args: Array[String]): Unit = {
+    val chatterBox = MessagingClient(host = "messaging.rndmi.com")
+
+    Try {
+      chatterBox.connectStream
+    } match {
+      case Success(_)         =>
+        println("Completed test")
+      case Failure(exception) =>
+        println(exception)
+        chatterBox.shutdown()
+    }
+  }
+
+  def apply(host: String = "localhost", port: Int = 8443): MessagingClient = {
     val builder = ManagedChannelBuilder.forAddress(host, port)
     val channel = builder.build()
+
+    // Set up metadata from hidden auth file
+    val authLines = Source.fromFile("client-auth.pem").getLines()
+    val authorization = authLines.next()
+    val session = authLines.next()
     val metadata = new Metadata()
     metadata.put(
       Metadata.Key.of("AUTHORIZATION", Metadata.ASCII_STRING_MARSHALLER),
-      userId
+      authorization
     )
+    metadata.put(
+      Metadata.Key.of("X-AUTHENTICATION", Metadata.ASCII_STRING_MARSHALLER),
+      session
+    )
+
+    // Set up stubs
     val blockingStub = MetadataUtils.attachHeaders(
       MessagingGrpc.blockingStub(channel),
       metadata
@@ -35,20 +70,7 @@ object ChatterBox {
       MessagingGrpc.stub(channel),
       metadata
     )
-    new ChatterBox(channel, blockingStub, asyncStub)
-  }
-
-  def main(args:Array[String]): Unit = {
-    val chatterBox = ChatterBox(host = "messaging.rndmi.com")
-
-    try {
-      chatterBox.connectStream("my channel")
-    }
-    catch {
-      case t:Throwable =>
-        println(t)
-        chatterBox.shutdown()
-    }
+    new MessagingClient(channel, blockingStub, asyncStub)
   }
 
   def encodeJsonAsByteString(jsonString: String): ByteString = {
@@ -61,22 +83,21 @@ object ChatterBox {
     val dec = Base64.getDecoder
     new String(dec.decode(messageByteString))
   }
-
 }
 
-class ChatterBox private (channel: ManagedChannel, blockingStub: MessagingBlockingStub, asyncStub: MessagingStub) {
-  def connectStream(userId: String): StreamObserver[Message] = {
+class MessagingClient private(channel: ManagedChannel, blockingStub: MessagingBlockingStub, asyncStub: MessagingStub) {
+  def connectStream: StreamObserver[Message] = {
     val r = new StreamObserver[Message] {
       override def onError(t: Throwable): Unit = {
         println(t)
       }
 
       override def onCompleted(): Unit = {
-        println("Completed")
+        println("Completed Stream")
       }
 
       override def onNext(message: Message): Unit = {
-        val b64String = ChatterBox.decodeByteStringAsJson(message.content)
+        val b64String = MessagingClient.decodeByteStringAsJson(message.content)
         println(s"Client Receive Message: $b64String")
       }
     }
@@ -90,21 +111,21 @@ class ChatterBox private (channel: ManagedChannel, blockingStub: MessagingBlocki
     println(s"Subscribing to channel ${chatChannel.id}")
     blockingStub.subscribeChannel(Subscription.Add(
       chatChannel.id,
-      ChatterBox.userId
+      MessagingClient.userId
     ))
 
     println(s"Testing messaging")
     val msg = "{'text':'hello there!'}"
-    val byteString = ChatterBox.encodeJsonAsByteString(msg)
+    val byteString = MessagingClient.encodeJsonAsByteString(msg)
     requestObserver.onNext(Message(
       channelId = chatChannel.id,
-      userId = ChatterBox.userId,
+      userId = MessagingClient.userId,
       content = byteString
     ))
     Thread.sleep(Random.nextInt(1000) + 500)
     requestObserver.onNext(Message(
       channelId = chatChannel.id,
-      userId = ChatterBox.userId,
+      userId = MessagingClient.userId,
       content = byteString
     ))
     Thread.sleep(Random.nextInt(1000) + 500)
@@ -117,8 +138,6 @@ class ChatterBox private (channel: ManagedChannel, blockingStub: MessagingBlocki
 
     r
   }
-
-
 
   def shutdown(): Unit = {
     channel.shutdown.awaitTermination(5, TimeUnit.SECONDS)
