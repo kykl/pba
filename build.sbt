@@ -9,6 +9,7 @@ lazy val akkaVersion = "2.4.10"
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
   "com.typesafe.akka" %% "akka-cluster-tools" % akkaVersion,
+  "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
   "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % "0.5.42",
   "io.grpc" % "grpc-all" % "1.0.1",
