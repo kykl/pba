@@ -26,27 +26,32 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 
 object MessagingServer {
+  implicit val executionContext = ExecutionContext.global
+  // Start Akka Cluster
+  val systemName = "DistributedMessaging"
+  implicit val system = ActorSystem(systemName)
+  val joinAddress = Cluster(system).selfAddress
+  val mediator = DistributedPubSub(system).mediator
   private val logger = Logger.getLogger(classOf[MessagingServer].getName)
   private val port = 8443
+  Cluster(system).join(joinAddress)
 
   def main(args: Array[String]): Unit = {
-    val authServiceClassName = ConfigFactory.load().getString("auth.service")
-    implicit val authService: AuthService = getClass.getClassLoader.loadClass(authServiceClassName).newInstance().asInstanceOf[AuthService]
-    val server = new MessagingServer(ExecutionContext.global)
+    val server = new MessagingServer
     server.start()
     server.blockUntilShutdown()
   }
 }
 
-class MessagingServer(executionContext: ExecutionContext)(implicit val authService: AuthService) {
+class MessagingServer {
   self =>
-  implicit val ec = executionContext
-  // Join akka pubsub cluster
-  val systemName = "DistributedMessaging"
-  val system = ActorSystem(systemName)
-  val joinAddress = Cluster(system).selfAddress
-  val mediator = DistributedPubSub(system).mediator
-  Cluster(system).join(joinAddress)
+
+  import MessagingServer._
+
+  // Start Auth Service
+  val authServiceClassName = ConfigFactory.load().getString("auth.service")
+  implicit val authService: AuthService = getClass.getClassLoader.loadClass(authServiceClassName).newInstance().asInstanceOf[AuthService]
+
   private[this] var server: Server = _
 
   private def start(): Unit = {
