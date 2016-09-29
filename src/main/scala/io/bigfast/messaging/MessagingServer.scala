@@ -10,8 +10,10 @@ import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import chat.ChatUser
 import com.rndmi.messaging.MessagingClient
+import com.rndmi.messaging.auth.RandomAuthService
 import io.bigfast.messaging.Channel.Subscription.{Add, Remove}
 import io.bigfast.messaging.Channel.{Get, Message}
+import io.bigfast.messaging.auth.AuthService
 import io.grpc._
 import io.grpc.stub.StreamObserver
 
@@ -28,13 +30,14 @@ object MessagingServer {
   private val port = 8443
 
   def main(args: Array[String]): Unit = {
+    implicit val authService = new RandomAuthService
     val server = new MessagingServer(ExecutionContext.global)
     server.start()
     server.blockUntilShutdown()
   }
 }
 
-class MessagingServer(executionContext: ExecutionContext) {
+class MessagingServer(executionContext: ExecutionContext)(implicit val authService: AuthService) {
   self =>
   implicit val ec = executionContext
   // Join akka pubsub cluster
@@ -85,7 +88,7 @@ class MessagingServer(executionContext: ExecutionContext) {
   private class ChatImpl extends MessagingGrpc.Messaging {
 
     override def channelMessageStream(responseObserver: StreamObserver[Message]): StreamObserver[Message] = {
-      val userId: String = HeaderServerInterceptor.contextKey.get()
+      val userId: String = HeaderServerInterceptor.userIdKey.get()
       println(s"Got userId: $userId")
       system.actorOf(ChatUser.props(userId, mediator, responseObserver))
 

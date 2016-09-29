@@ -1,32 +1,39 @@
 package io.bigfast.messaging
 
+import io.bigfast.messaging.auth.AuthService
 import io.grpc.Context.Key
 import io.grpc._
+
+import scala.util.{Failure, Success}
 
 /**
   * Created by andy on 9/19/16.
   */
-class HeaderServerInterceptor extends ServerInterceptor {
+class HeaderServerInterceptor(implicit authService: AuthService) extends ServerInterceptor {
 
   override def interceptCall[RespT, ReqT](call: ServerCall[RespT, ReqT], requestHeaders: Metadata, next: ServerCallHandler[RespT, ReqT]) = {
-    val authorization = requestHeaders.get[String](HeaderServerInterceptor.metadataKey)
-
-    val context = Context.current().withValue(
-      HeaderServerInterceptor.contextKey,
-      authorization
-    )
-
-    Contexts.interceptCall(
-      context,
-      call,
-      requestHeaders,
-      next
-    )
+    authService.doAuth(requestHeaders) match {
+      case Success((userId, isPrivileged)) =>
+        val context = Context.current().withValues(
+          HeaderServerInterceptor.userIdKey,
+          userId,
+          HeaderServerInterceptor.privilegedKey,
+          isPrivileged
+        )
+        Contexts.interceptCall(
+          context,
+          call,
+          requestHeaders,
+          next
+        )
+      case Failure(exception) =>
+        println(exception)
+        throw exception
+    }
   }
 }
 
 object HeaderServerInterceptor {
-  val metadataKey = Metadata.Key.of("AUTHORIZATION", Metadata.ASCII_STRING_MARSHALLER)
-
-  val contextKey: Key[String] = Context.key("AUTHORIZATION")
+  val userIdKey: Key[String] = Context.key("userId")
+  val privilegedKey: Key[Boolean] = Context.key("isPrivileged")
 }
