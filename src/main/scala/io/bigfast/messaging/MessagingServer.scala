@@ -1,8 +1,8 @@
 package io.bigfast.messaging
 
 import java.io.File
-import java.util.{Base64, UUID}
 import java.util.logging.Logger
+import java.util.{Base64, UUID}
 
 import akka.actor.ActorSystem
 import akka.cluster.Cluster
@@ -139,4 +139,5 @@ class MessagingServer(executionContext: ExecutionContext)(implicit val authServi
       Empty.defaultInstance
     }
   }
+
 }

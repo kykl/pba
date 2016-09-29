@@ -26,7 +26,7 @@ class HeaderServerInterceptor(implicit authService: AuthService) extends ServerI
           requestHeaders,
           next
         )
-      case Failure(exception) =>
+      case Failure(exception)              =>
         println(exception)
         throw exception
     }
