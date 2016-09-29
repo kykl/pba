@@ -1,6 +1,5 @@
-package io.bigfast.messaging
+package io.bigfast.messaging.auth
 
-import io.bigfast.messaging.auth.AuthService
 import io.grpc.Context.Key
 import io.grpc._
 

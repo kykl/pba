@@ -8,12 +8,11 @@ import akka.actor.ActorSystem
 import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
-import chat.ChatUser
 import com.rndmi.messaging.MessagingClient
 import com.rndmi.messaging.auth.RandomAuthService
 import io.bigfast.messaging.Channel.Subscription.{Add, Remove}
 import io.bigfast.messaging.Channel.{Get, Message}
-import io.bigfast.messaging.auth.AuthService
+import io.bigfast.messaging.auth.{AuthService, HeaderServerInterceptor}
 import io.grpc._
 import io.grpc.stub.StreamObserver
 
@@ -90,7 +89,7 @@ class MessagingServer(executionContext: ExecutionContext)(implicit val authServi
     override def channelMessageStream(responseObserver: StreamObserver[Message]): StreamObserver[Message] = {
       val userId: String = HeaderServerInterceptor.userIdKey.get()
       println(s"Got userId: $userId")
-      system.actorOf(ChatUser.props(userId, mediator, responseObserver))
+      system.actorOf(User.props(userId, mediator, responseObserver))
 
 
       new StreamObserver[Channel.Message] {
@@ -127,14 +126,14 @@ class MessagingServer(executionContext: ExecutionContext)(implicit val authServi
 
     override def subscribeChannel(request: Add): Future[Empty] = Future {
       println(s"Subscribe to channel ${request.channelId} for user ${request.userId}")
-      val adminTopic = ChatUser.adminTopic(request.userId.toString)
+      val adminTopic = User.adminTopic(request.userId.toString)
       mediator ! Publish(adminTopic, Add(request.channelId, request.userId))
       Empty.defaultInstance
     }
 
     override def unsubscribeChannel(request: Remove): Future[Empty] = Future {
       println(s"Unsubscribe from channel ${request.channelId} for user ${request.userId}")
-      val adminTopic = ChatUser.adminTopic(request.userId.toString)
+      val adminTopic = User.adminTopic(request.userId.toString)
       mediator ! Publish(adminTopic, Remove(request.channelId, request.userId))
       Empty.defaultInstance
     }
