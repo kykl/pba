@@ -27,18 +27,20 @@ import scala.util.{Failure, Random, Success, Try}
 object MessagingClient {
   // Hardcoded from rndmi internal auth
   val userId = "18125"
+  val decoder = Base64.getDecoder
+  val encoder = Base64.getEncoder
 
   def main(args: Array[String]): Unit = {
-    val chatterBox = MessagingClient(host = "messaging.rndmi.com")
+    val messagingClient = MessagingClient(host = "messaging.rndmi.com")
 
     Try {
-      chatterBox.connectStream
+      messagingClient.connectStream
     } match {
       case Success(_)         =>
         println("Completed test")
       case Failure(exception) =>
         println(exception)
-        chatterBox.shutdown()
+        messagingClient.shutdown()
     }
   }
 
@@ -73,14 +75,13 @@ object MessagingClient {
   }
 
   def encodeJsonAsByteString(jsonString: String): ByteString = {
-    val b64String = Base64.getEncoder.encodeToString(jsonString.getBytes(StandardCharsets.UTF_8))
+    val b64String = encoder.encodeToString(jsonString.getBytes(StandardCharsets.UTF_8))
     ByteString.copyFrom(b64String, StandardCharsets.UTF_8)
   }
 
   def decodeByteStringAsJson(byteString: ByteString): String = {
     val messageByteString = byteString.toByteArray
-    val dec = Base64.getDecoder
-    new String(dec.decode(messageByteString))
+    new String(decoder.decode(messageByteString))
   }
 }
 
