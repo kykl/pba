@@ -9,7 +9,7 @@ import akka.cluster.Cluster
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator.Publish
 import com.rndmi.messaging.MessagingClient
-import com.rndmi.messaging.auth.RandomAuthService
+import com.typesafe.config.ConfigFactory
 import io.bigfast.messaging.Channel.Subscription.{Add, Remove}
 import io.bigfast.messaging.Channel.{Get, Message}
 import io.bigfast.messaging.auth.{AuthService, HeaderServerInterceptor}
@@ -17,6 +17,7 @@ import io.grpc._
 import io.grpc.stub.StreamObserver
 
 import scala.concurrent.{ExecutionContext, Future}
+
 
 /**
   * MessagingServer
@@ -29,7 +30,8 @@ object MessagingServer {
   private val port = 8443
 
   def main(args: Array[String]): Unit = {
-    implicit val authService = new RandomAuthService
+    val authServiceClassName = ConfigFactory.load().getString("auth.service")
+    implicit val authService: AuthService = getClass.getClassLoader.loadClass(authServiceClassName).newInstance().asInstanceOf[AuthService]
     val server = new MessagingServer(ExecutionContext.global)
     server.start()
     server.blockUntilShutdown()
@@ -110,12 +112,12 @@ class MessagingServer(executionContext: ExecutionContext)(implicit val authServi
     override def createChannel(request: Empty): Future[Channel] = Future {
       val channelId = UUID.randomUUID().toString
       val channel = Channel(channelId)
-      println(s"Creating channel ${channel.id}")
+      println(s"Create channel ${channel.id}")
       channel
     }
 
     override def channelHistory(request: Get): Future[Channel] = Future {
-      println(s"Returning channel history for channel ${request.channelId}")
+      println(s"Return channel history for channel ${request.channelId}")
       val msg = MessagingClient.encodeJsonAsByteString("{text: 'ping'}")
       val messages = Seq(
         Message(id = "1", channelId = request.channelId, userId = MessagingClient.userId, content = msg),

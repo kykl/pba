@@ -17,9 +17,7 @@ object User {
 }
 
 class User(name: String, mediator: ActorRef, streamObserver: StreamObserver[Message]) extends Actor with ActorLogging {
-  val topic = User.adminTopic(name)
-  mediator ! Subscribe(topic, self)
-  println(s"$name subscribed $topic")
+  mediator ! Subscribe(User.adminTopic(name), self)
 
   def receive = {
     case message: Message =>
