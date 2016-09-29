@@ -21,8 +21,7 @@ import scala.util.{Failure, Random, Success, Try}
   * Create channel (privileged)
   * Subscribe to channel (privileged)
   * Connect to bidirectional stream
-  * Send message
-  * Should also receive messages
+  * Send and receive the same message twice
   */
 
 object MessagingClient {
