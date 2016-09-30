@@ -98,7 +98,6 @@ class MessagingServer {
       println(s"Got userId: $userId")
       system.actorOf(User.props(userId, mediator, responseObserver))
 
-
       new StreamObserver[Channel.Message] {
         override def onError(t: Throwable): Unit = println(t)
 
@@ -114,12 +113,18 @@ class MessagingServer {
       }
     }
 
-    override def createChannel(request: Empty): Future[Channel] = Future {
-      val channelId = UUID.randomUUID().toString
-      val channel = Channel(channelId)
-      println(s"Create channel ${channel.id}")
-      channel
-    }
+    override def createChannel(request: Empty): Future[Channel] =
+      if (HeaderServerInterceptor.privilegedKey.get()) {
+        Future {
+          val channelId = UUID.randomUUID().toString
+          val channel = Channel(channelId)
+          println(s"Create channel ${channel.id}")
+          channel
+        }
+      } else {
+        Future.failed(new Throwable("Not privileged"))
+      }
+
 
     override def channelHistory(request: Get): Future[Channel] = Future {
       println(s"Return channel history for channel ${request.channelId}")
