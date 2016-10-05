@@ -1,28 +1,26 @@
 package io.bigfast.tracking
 
-import java.util
-
 import akka.actor.ActorSystem
-import akka.kafka.{ProducerMessage, ProducerSettings}
+import akka.kafka.ProducerSettings
 import akka.kafka.scaladsl.Producer
+import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, OverflowStrategy}
-import akka.stream.scaladsl.{Sink, Source}
 import io.grpc.stub.StreamObserver
 import io.grpc.{Server, ServerBuilder}
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.serialization.{ByteArraySerializer, Serializer, StringSerializer}
+import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 
-import scala.collection.mutable.Queue
+import scala.concurrent.ExecutionContext
+import scala.util.Random
 
 /**
   * Created by kykl on 9/30/16.
   */
 
 object TrackerService {
-
   //implicit val executionContext = ExecutionContext.global
   implicit val system = ActorSystem("system")
-  implicit val executionContext = system.dispatchers.lookup("my-dispatcher")
+  implicit val executionContext = ExecutionContext.Implicits.global
   implicit val materializer = ActorMaterializer()
 
   def main(args:Array[String]) = {
@@ -69,8 +67,8 @@ class TrackerService {
     override def track(responseObserver: StreamObserver[Empty]): StreamObserver[Event]  = {
       val producerSettings = ProducerSettings(system, new ByteArraySerializer, new StringSerializer).withBootstrapServers("kafka:9092")
 
-      val queue = Source.queue[Event](1000, OverflowStrategy.backpressure).map { event =>
-        new ProducerRecord[Array[Byte], String]("ba-event", event.toString)
+      val queue = Source.queue[Event](100000, OverflowStrategy.backpressure).map { event =>
+        new ProducerRecord[Array[Byte], String]("gsa-event", event.toString)
       }.to(Producer.plainSink(producerSettings)).run()
 
       new StreamObserver[Event] {
@@ -79,11 +77,12 @@ class TrackerService {
         }
 
         override def onCompleted(): Unit = {
-
+          println("onCompleted")
         }
 
         override def onNext(event: Event): Unit = {
-          println(s"onNext event.id: ${event.id}")
+          val i = event.id.split(":")(0).toInt
+          if (i > 99900) println(s"onNext event.id: ${event.id}")
           queue.offer(event)
         }
       }
