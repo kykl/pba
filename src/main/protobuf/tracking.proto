@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package io.bigfast;
+
+message Empty {}
+
+message Event {
+    string id = 1;
+    uint64 createdAt = 2;
+    uint64 collectedAt = 3;
+    string uid = 4;
+}
+
+// Tracking service definition.
+service Tracking {
+    rpc Track(stream Event) returns (Empty) {}
+}
+
