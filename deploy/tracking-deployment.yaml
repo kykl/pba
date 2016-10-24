@@ -1,0 +1,38 @@
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: tracking
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: tracking
+      labels:
+        name: tracking
+        role: tracking
+    spec:
+      containers:
+      - image: kykl/pba-tracking:0.1.9
+        env:
+        - name: GCS_RESTORE_URL
+          value: DISABLED
+        command:
+        - /opt/docker/bin/pba-tracking
+        name: tracking
+        ports:
+        - containerPort: 9999
+          name: tracking-grpc
+        volumeMounts:
+        - name: data
+          mountPath: /var/log/tracking
+#        resources:
+#          requests:
+#            memory: "512M"
+#            cpu: "250m"
+#          limits:
+#            memory: "1G"
+#            cpu: "500m"
+      volumes:
+      - name: data
+        emptyDir: {}

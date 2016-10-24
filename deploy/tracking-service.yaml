@@ -1,0 +1,18 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: tracking-service
+  labels:
+    name: tracking
+    role: tracking
+spec:
+  ports:
+  - name: tracking-grpc
+    port: 80
+    targetPort: tracking-grpc
+    protocol: TCP
+  selector:
+    name: tracking
+    role: tracking
+  type: LoadBalancer

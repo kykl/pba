@@ -1,10 +1,20 @@
-name := """messaging-cluster"""
+import com.typesafe.sbt.packager.docker._
 
-version := "0.1"
+lazy val root = (project in file(".")).
+  settings(
+    name := "pba-tracking",
+    version := "0.1.9",
+    mainClass in Compile := Some("io.bigfast.tracking.grpc.service.TrackingService"),
+    scalaVersion := "2.11.8"
+  ).
+  enablePlugins(JavaAppPackaging)
 
-scalaVersion := "2.11.8"
-
-lazy val akkaVersion = "2.4.10"
+packageName in Docker := "kykl/pba-tracking"
+dockerBaseImage := "develar/java:8u45"
+dockerCommands := dockerCommands.value flatMap {
+  case cmd@Cmd("FROM", _) => List(cmd, Cmd("RUN", "apk update && apk add bash"))
+  case other              => List(other)
+}
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-stream-kafka" % "0.12",
