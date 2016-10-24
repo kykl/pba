@@ -19,7 +19,7 @@ class TrackingImpl()(implicit val system:ActorSystem, val materilizer:Materializ
     var queue:SourceQueue[Event] = null
     Source.queue[Event](qBufsize, OverflowStrategy.backpressure).mapMaterializedValue { q => queue = q }
     .map { event =>
-      ProducerMessage.Message(new ProducerRecord[Array[Byte], Array[Byte]]("event2", event.toByteArray), event.id)
+      ProducerMessage.Message(new ProducerRecord[Array[Byte], Array[Byte]]("event", event.toByteArray), event.id)
     }
     .via(Producer.flow(producerSettings)).map { result =>
       val record = result.message.record
