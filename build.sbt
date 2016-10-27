@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.docker._
 lazy val root = (project in file(".")).
   settings(
     name := "pba-tracking",
-    version := "0.1.9",
+    version := "0.1.11",
     mainClass in Compile := Some("io.bigfast.tracking.grpc.service.TrackingService"),
     scalaVersion := "2.11.8"
   ).

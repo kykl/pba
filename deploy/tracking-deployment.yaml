@@ -13,7 +13,7 @@ spec:
         role: tracking
     spec:
       containers:
-      - image: kykl/pba-tracking:0.1.9
+      - image: kykl/pba-tracking:0.1.11
         env:
         - name: GCS_RESTORE_URL
           value: DISABLED

@@ -1,6 +1,7 @@
 package io.bigfast.tracking.grpc.service
 
 import akka.actor.ActorSystem
+import akka.event.Logging
 import akka.kafka.scaladsl.Producer
 import akka.kafka.{ProducerMessage, ProducerSettings}
 import akka.stream.scaladsl.{Sink, Source, SourceQueue}
@@ -11,6 +12,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.ByteArraySerializer
 
 class TrackingImpl()(implicit val system:ActorSystem, val materilizer:Materializer) extends TrackingGrpc.Tracking {
+  val log = Logging.getLogger(system, this)
   val conf =  system.settings.config
   val qBufsize = conf.getInt("tracking.service.queue.bufsize")
 
@@ -37,12 +39,13 @@ class TrackingImpl()(implicit val system:ActorSystem, val materilizer:Materializ
       }
 
       override def onCompleted(): Unit = {
-        println("completed")
+        log.info("completed")
         responseObserver.onCompleted()
       }
 
       override def onNext(event: Event): Unit = {
         try {
+          log.info(s"id: ${event.id}")
           queue.offer(event)
         }
         catch {
